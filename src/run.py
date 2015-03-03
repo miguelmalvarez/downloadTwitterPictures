@@ -8,11 +8,6 @@ consumer_secret = 'YOUR-CONSUMER-SECRET'
 access_token = 'YOUR-ACCESS-TOKEN'
 access_secret = 'YOUR-ACCESS-SECRET'
 
-consumer_key = 'cMCTi0MRtbjHdrrtSrI7Q'
-consumer_secret = 'eTmfLHvt51RMngPM32stUVQCXtluR9XNbKU6WrUs'
-access_token = '97880420-AQL6lDvSs7ZrfroBocwn5G5D5H5ZPPsBcacUn9hTd'
-access_secret = 'sEJ6mEgbAB2PGeaG6VzJopS5ILWVHgiFhiAI9rTq9c'
- 
 # TODO: User account via shell.
 username = "miguelmalvarez"
 
@@ -41,7 +36,6 @@ tweets = api.user_timeline(screen_name=username, count=200, include_rts=False, e
 last_id = tweets[-1].id
 
 while (True):
-	print("call")
 	more_tweets = api.user_timeline(screen_name=username, count=200, include_rts=False, exclude_replies=True, max_id=last_id-1)
 	if (len(more_tweets) == 0):
 		break
