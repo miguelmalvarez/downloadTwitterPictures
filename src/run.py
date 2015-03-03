@@ -8,7 +8,8 @@ consumer_secret = 'YOUR-CONSUMER-SECRET'
 access_token = 'YOUR-ACCESS-TOKEN'
 access_secret = 'YOUR-ACCESS-SECRET'
 
-username = "signalhq"
+username = "miguelmalvarez"
+
 @classmethod
 def parse(cls, api, raw):
     status = cls.first_parse(api, raw)
@@ -47,8 +48,6 @@ for status in tweets:
 	media = status.entities.get('media', []) 
 	if(len(media) > 0):
 		media_files.add(media[0]['media_url'])
-
-print(set(media_files))
 
 for media_file in media_files:
 	wget.download(media_file)
