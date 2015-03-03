@@ -46,7 +46,7 @@ while (True):
 	if (len(more_tweets) == 0):
 		break
 	else:
-		last_id = more_tweets[-1].id
+		last_id = more_tweets[-1].id-1
 		tweets = tweets + more_tweets
 
 media_files = []
