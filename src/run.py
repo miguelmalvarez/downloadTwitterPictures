@@ -7,7 +7,8 @@ consumer_key = 'YOUR-CONSUMER-KEY'
 consumer_secret = 'YOUR-CONSUMER-SECRET'
 access_token = 'YOUR-ACCESS-TOKEN'
 access_secret = 'YOUR-ACCESS-SECRET'
- 
+
+username = "signalhq"
 @classmethod
 def parse(cls, api, raw):
     status = cls.first_parse(api, raw)
@@ -26,8 +27,28 @@ auth = OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_secret)
  
 api = tweepy.API(auth)
+ 
+tweets = []
 
-for counter, status in enumerate(api.user_timeline(screen_name="signalhq", count=1000)):
-    # Process a single status
-    if (len(status.entities.get('media', [])) > 0):	
-    	wget.download(status.entities['media'][0]['media_url'])
+tweets = api.user_timeline(screen_name=username, count=200, include_rts=False, exclude_replies=True)
+last_id = tweets[-1].id
+
+while (True):
+	print("call")
+	more_tweets = api.user_timeline(screen_name=username, count=200, include_rts=False, exclude_replies=True, max_id=last_id)
+	if (last_id == more_tweets[-1].id):
+		break
+	else:
+		last_id = more_tweets[-1].id
+		tweets = tweets + more_tweets
+
+media_files = set()
+for status in tweets:
+	media = status.entities.get('media', []) 
+	if(len(media) > 0):
+		media_files.add(media[0]['media_url'])
+
+print(set(media_files))
+
+for media_file in media_files:
+	wget.download(media_file)
