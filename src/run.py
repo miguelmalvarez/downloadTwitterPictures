@@ -8,6 +8,12 @@ consumer_secret = 'YOUR-CONSUMER-SECRET'
 access_token = 'YOUR-ACCESS-TOKEN'
 access_secret = 'YOUR-ACCESS-SECRET'
 
+consumer_key = 'cMCTi0MRtbjHdrrtSrI7Q'
+consumer_secret = 'eTmfLHvt51RMngPM32stUVQCXtluR9XNbKU6WrUs'
+access_token = '97880420-AQL6lDvSs7ZrfroBocwn5G5D5H5ZPPsBcacUn9hTd'
+access_secret = 'sEJ6mEgbAB2PGeaG6VzJopS5ILWVHgiFhiAI9rTq9c'
+ 
+# TODO: User account via shell.
 username = "miguelmalvarez"
 
 @classmethod
@@ -36,18 +42,18 @@ last_id = tweets[-1].id
 
 while (True):
 	print("call")
-	more_tweets = api.user_timeline(screen_name=username, count=200, include_rts=False, exclude_replies=True, max_id=last_id)
-	if (last_id == more_tweets[-1].id):
+	more_tweets = api.user_timeline(screen_name=username, count=200, include_rts=False, exclude_replies=True, max_id=last_id-1)
+	if (len(more_tweets) == 0):
 		break
 	else:
 		last_id = more_tweets[-1].id
 		tweets = tweets + more_tweets
 
-media_files = set()
+media_files = []
 for status in tweets:
 	media = status.entities.get('media', []) 
 	if(len(media) > 0):
-		media_files.add(media[0]['media_url'])
+		media_files.append(media[0]['media_url'])
 
 for media_file in media_files:
 	wget.download(media_file)
