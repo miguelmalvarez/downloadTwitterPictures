@@ -1,6 +1,7 @@
 import tweepy
 from tweepy import OAuthHandler
 import json
+import wget
 
 consumer_key = 'YOUR-CONSUMER-KEY'
 consumer_secret = 'YOUR-CONSUMER-SECRET'
@@ -26,9 +27,7 @@ auth.set_access_token(access_token, access_secret)
  
 api = tweepy.API(auth)
 
-for status in api.user_timeline(screen_name="signalhq", count=200):
+for counter, status in enumerate(api.user_timeline(screen_name="signalhq", count=1000)):
     # Process a single status
-    try:
-    	print(status.entities['media'][0]['media_url'])
-    except:  
-    	print('No media')
+    if (len(status.entities.get('media', [])) > 0):	
+    	wget.download(status.entities['media'][0]['media_url'])
