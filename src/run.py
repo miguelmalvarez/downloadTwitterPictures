@@ -3,16 +3,15 @@ from tweepy import OAuthHandler
 import json
 import wget
 import argparse
+import configparser
 
-# TODO: Get credentials from config file
-consumer_key = 'YOUR-CONSUMER-KEY'
-consumer_secret = 'YOUR-CONSUMER-SECRET'
-access_token = 'YOUR-ACCESS-TOKEN'
-access_secret = 'YOUR-ACCESS-SECRET'
-
+#TODO: General refactor
 parser = argparse.ArgumentParser(description='Download pictures from a Twitter feed.')
 parser.add_argument('username', type=str, help='the twitter screen name from the account we want to retrieve all the pictures')
 args = parser.parse_args()
+
+config = configparser.ConfigParser()
+config.read('config.cfg')
 
 username = args.username
 
@@ -30,8 +29,8 @@ tweepy.models.User.first_parse = tweepy.models.User.parse
 tweepy.models.User.parse = parse
 # You need to do it for all the models you need
 
-auth = OAuthHandler(consumer_key, consumer_secret)
-auth.set_access_token(access_token, access_secret)
+auth = OAuthHandler(config['DEFAULT']['consumer_key'], config['DEFAULT']['consumer_secret'])
+auth.set_access_token(config['DEFAULT']['access_token'], config['DEFAULT']['access_secret'])
  
 api = tweepy.API(auth)
  
