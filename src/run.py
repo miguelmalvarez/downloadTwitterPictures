@@ -2,14 +2,19 @@ import tweepy
 from tweepy import OAuthHandler
 import json
 import wget
+import argparse
 
+# TODO: Get credentials from config file
 consumer_key = 'YOUR-CONSUMER-KEY'
 consumer_secret = 'YOUR-CONSUMER-SECRET'
 access_token = 'YOUR-ACCESS-TOKEN'
 access_secret = 'YOUR-ACCESS-SECRET'
 
-# TODO: User account via shell.
-username = "miguelmalvarez"
+parser = argparse.ArgumentParser(description='Download pictures from a Twitter feed.')
+parser.add_argument('username', type=str, help='the twitter screen name from the account we want to retrieve all the pictures')
+args = parser.parse_args()
+
+username = args.username
 
 @classmethod
 def parse(cls, api, raw):
