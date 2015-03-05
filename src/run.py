@@ -5,6 +5,7 @@ import wget
 import argparse
 import configparser
 
+#TODO: Limit by number of tweets?
 def parse_arguments():
 	parser = argparse.ArgumentParser(description='Download pictures from a Twitter feed.')
 	parser.add_argument('username', type=str, help='the twitter screen name from the account we want to retrieve all the pictures')
@@ -17,7 +18,6 @@ def parse_config(config_file):
 	# TODO: Return a dictionary with all the key-values
 	return config 
 	
-
 @classmethod
 def parse(cls, api, raw):
     status = cls.first_parse(api, raw)
@@ -54,15 +54,14 @@ def main():
 			last_id = more_tweets[-1].id-1
 			tweets = tweets + more_tweets
 
-			media_files = []
-			for status in tweets:
-				media = status.entities.get('media', []) 
-				if(len(media) > 0):
-					media_files.append(media[0]['media_url'])
+	media_files = []
+	for status in tweets:
+		media = status.entities.get('media', []) 
+		if(len(media) > 0):
+			media_files.append(media[0]['media_url'])
 
-					for media_file in media_files:
-						wget.download(media_file)
+	for media_file in media_files:
+		wget.download(media_file)
 
-
-						if __name__=='__main__':
-							main()
+if __name__=='__main__':
+    main()
