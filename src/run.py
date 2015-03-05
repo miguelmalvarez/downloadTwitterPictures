@@ -32,12 +32,15 @@ def init_tweepy():
 	tweepy.models.User.first_parse = tweepy.models.User.parse
 	tweepy.models.User.parse = parse
 
+def authorise_twitter_api(config):
+	auth = OAuthHandler(config['DEFAULT']['consumer_key'], config['DEFAULT']['consumer_secret'])
+	auth.set_access_token(config['DEFAULT']['access_token'], config['DEFAULT']['access_secret'])
+	return auth
+
 def main():    
 	username = parse_arguments().username
 	config = parse_config('config.cfg')
-
-	auth = OAuthHandler(config['DEFAULT']['consumer_key'], config['DEFAULT']['consumer_secret'])
-	auth.set_access_token(config['DEFAULT']['access_token'], config['DEFAULT']['access_secret'])
+	auth = authorise_twitter_api(config)	
  
 	api = tweepy.API(auth)
  
