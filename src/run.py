@@ -8,7 +8,9 @@ import configparser
 #TODO: Limit by number of tweets?
 def parse_arguments():
 	parser = argparse.ArgumentParser(description='Download pictures from a Twitter feed.')
-	parser.add_argument('username', type=str, help='the twitter screen name from the account we want to retrieve all the pictures')
+	parser.add_argument('username', type=str, help='The twitter screen name from the account we want to retrieve all the pictures')
+	parser.add_argument('retweets', action='store_true', help='Include retweets')
+	parser.set_defaults(retweets=False)	
 	args = parser.parse_args()
 	return args
 
@@ -38,19 +40,22 @@ def authorise_twitter_api(config):
 	return auth
 
 def main():    
-	username = parse_arguments().username
+	#TODO: Restructure in a dictionary?
+	arguments = parse_arguments() 
+	username = arguments.username
+	retweets = arguments.retweets
+
 	config = parse_config('config.cfg')
-	auth = authorise_twitter_api(config)	
- 
+	auth = authorise_twitter_api(config)	 
 	api = tweepy.API(auth)
  
+ 	# TODO: Refactor tweets processing.
 	tweets = []
-
-	tweets = api.user_timeline(screen_name=username, count=200, include_rts=False, exclude_replies=True)
+	tweets = api.user_timeline(screen_name=username, count=200, include_rts=retweets, exclude_replies=True)
 	last_id = tweets[-1].id
 
 	while (True):
-		more_tweets = api.user_timeline(screen_name=username, count=200, include_rts=False, exclude_replies=True, max_id=last_id-1)
+		more_tweets = api.user_timeline(screen_name=username, count=200, include_rts=retweets, exclude_replies=True, max_id=last_id-1)
 		if (len(more_tweets) == 0):
 			break
 		else:
