@@ -9,8 +9,12 @@ import configparser
 def parse_arguments():
 	parser = argparse.ArgumentParser(description='Download pictures from a Twitter feed.')
 	parser.add_argument('username', type=str, help='The twitter screen name from the account we want to retrieve all the pictures')
-	parser.add_argument('retweets', action='store_true', help='Include retweets')
-	parser.set_defaults(retweets=False)	
+	parser.set_defaults(retweets=False)
+	parser.add_argument('--retweets', action='store_true', help='Include retweets')
+	
+	parser.set_defaults(replies=False)	
+	parser.add_argument('--replies', action='store_true', help='Include replies')
+	
 	args = parser.parse_args()
 	return args
 
@@ -44,18 +48,22 @@ def main():
 	arguments = parse_arguments() 
 	username = arguments.username
 	retweets = arguments.retweets
+	replies = arguments.replies
+
+	print(username, retweets, replies)
 
 	config = parse_config('config.cfg')
 	auth = authorise_twitter_api(config)	 
 	api = tweepy.API(auth)
  
  	# TODO: Refactor tweets processing.
+ 	# Better efficiency, save every tweet as they come instead of reading them all?
 	tweets = []
-	tweets = api.user_timeline(screen_name=username, count=200, include_rts=retweets, exclude_replies=True)
+	tweets = api.user_timeline(screen_name=username, count=200, include_rts=retweets, exclude_replies=replies)
 	last_id = tweets[-1].id
 
 	while (True):
-		more_tweets = api.user_timeline(screen_name=username, count=200, include_rts=retweets, exclude_replies=True, max_id=last_id-1)
+		more_tweets = api.user_timeline(screen_name=username, count=200, include_rts=retweets, exclude_replies=replies, max_id=last_id-1)
 		if (len(more_tweets) == 0):
 			break
 		else:
