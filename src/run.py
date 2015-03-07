@@ -43,22 +43,8 @@ def authorise_twitter_api(config):
 	auth.set_access_token(config['DEFAULT']['access_token'], config['DEFAULT']['access_secret'])
 	return auth
 
-def main():    
-	#TODO: Restructure in a dictionary?
-	arguments = parse_arguments() 
-	username = arguments.username
-	retweets = arguments.retweets
-	replies = arguments.replies
-
-	print(username, retweets, replies)
-
-	config = parse_config('config.cfg')
-	auth = authorise_twitter_api(config)	 
-	api = tweepy.API(auth)
- 
- 	# TODO: Refactor tweets processing.
+def download_images(api, username, retweets, replies):
  	# Better efficiency, save every tweet as they come instead of reading them all?
-	tweets = []
 	tweets = api.user_timeline(screen_name=username, count=200, include_rts=retweets, exclude_replies=replies)
 	last_id = tweets[-1].id
 
@@ -78,6 +64,19 @@ def main():
 
 	for media_file in media_files:
 		wget.download(media_file)
+
+def main():    
+	#TODO: Restructure in a dictionary?
+	arguments = parse_arguments() 
+	username = arguments.username
+	retweets = arguments.retweets
+	replies = arguments.replies
+
+	config = parse_config('config.cfg')
+	auth = authorise_twitter_api(config)	 
+	api = tweepy.API(auth)
+
+	download_images(api, username, retweets, replies)
 
 if __name__=='__main__':
     main()
