@@ -9,6 +9,10 @@ import configparser
 def parse_arguments():
 	parser = argparse.ArgumentParser(description='Download pictures from a Twitter feed.')
 	parser.add_argument('username', type=str, help='The twitter screen name from the account we want to retrieve all the pictures')
+
+	parser.add_argument('--num', type=int, help='Maximum number of tweets to be returned.')
+	parser.set_defaults(num=100)
+
 	parser.set_defaults(retweets=False)
 	parser.add_argument('--retweets', action='store_true', help='Include retweets')
 	
@@ -43,11 +47,12 @@ def authorise_twitter_api(config):
 	auth.set_access_token(config['DEFAULT']['access_token'], config['DEFAULT']['access_secret'])
 	return auth
 
-def download_images(api, username, retweets, replies):
+def download_images(api, username, retweets, replies, num_tweets):
  	# Better efficiency, save every tweet as they come instead of reading them all?
 	tweets = api.user_timeline(screen_name=username, count=200, include_rts=retweets, exclude_replies=replies)
 	last_id = tweets[-1].id
 
+	# TODO: Make more efficient 
 	while (True):
 		more_tweets = api.user_timeline(screen_name=username, count=200, include_rts=retweets, exclude_replies=replies, max_id=last_id-1)
 		if (len(more_tweets) == 0):
@@ -62,7 +67,7 @@ def download_images(api, username, retweets, replies):
 		if(len(media) > 0):
 			media_files.append(media[0]['media_url'])
 
-	for media_file in media_files:
+	for media_file in media_files[:num_tweets]:
 		wget.download(media_file)
 
 def main():    
@@ -71,12 +76,13 @@ def main():
 	username = arguments.username
 	retweets = arguments.retweets
 	replies = arguments.replies
+	num_tweets = arguments.num
 
 	config = parse_config('config.cfg')
 	auth = authorise_twitter_api(config)	 
 	api = tweepy.API(auth)
 
-	download_images(api, username, retweets, replies)
+	download_images(api, username, retweets, replies, num_tweets)
 
 if __name__=='__main__':
     main()
