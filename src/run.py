@@ -53,22 +53,20 @@ def download_images(api, username, retweets, replies, num_tweets):
 	last_id = tweets[-1].id
 
 	# TODO: Make more efficient 
-	while (True):
-		more_tweets = api.user_timeline(screen_name=username, count=200, include_rts=retweets, exclude_replies=replies, max_id=last_id-1)
-		if (len(more_tweets) == 0):
+	downloaded = 0
+	while (True):		
+		if (len(tweets) == 0):
 			break
 		else:
-			last_id = more_tweets[-1].id-1
-			tweets = tweets + more_tweets
+			last_id = tweets[-1].id-1
+		
+		for status in tweets:
+			media = status.entities.get('media', []) 
+			if(len(media) > 0 and downloaded < num_tweets):
+				wget.download(media[0]['media_url'])
+				downloaded += 1				
 
-	media_files = []
-	for status in tweets:
-		media = status.entities.get('media', []) 
-		if(len(media) > 0):
-			media_files.append(media[0]['media_url'])
-
-	for media_file in media_files[:num_tweets]:
-		wget.download(media_file)
+		tweets = api.user_timeline(screen_name=username, count=200, include_rts=retweets, exclude_replies=replies, max_id=last_id-1)
 
 def main():    
 	#TODO: Restructure in a dictionary?
