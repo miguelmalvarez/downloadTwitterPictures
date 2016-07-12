@@ -10,14 +10,10 @@ import configparser
 def parse_arguments():
   parser = argparse.ArgumentParser(description='Download pictures from a Twitter feed.')
   parser.add_argument('username', type=str, help='The twitter screen name from the account we want to retrieve all the pictures')
-  parser.add_argument('--num', type=int, help='Maximum number of tweets to be returned.')
-  parser.set_defaults(num=100)
-  parser.set_defaults(retweets=False)
-  parser.add_argument('--retweets', action='store_true', help='Include retweets')
-  parser.set_defaults(replies=False)  
-  parser.add_argument('--replies', action='store_true', help='Include replies')
-  parser.add_argument('--output', type=str, help='folder where the pictures will be stored')
-  parser.set_defaults(output='../pictures/')
+  parser.add_argument('--num', type=int, default=100, help='Maximum number of tweets to be returned.')
+  parser.add_argument('--retweets', default=False, action='store_true', help='Include retweets')
+  parser.add_argument('--replies', default=False, action='store_true', help='Include replies')
+  parser.add_argument('--output', default='../pictures/', type=str, help='folder where the pictures will be stored')
 
   args = parser.parse_args()
   return args
