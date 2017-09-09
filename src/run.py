@@ -43,21 +43,29 @@ def authorise_twitter_api(config):
   return auth
 
 def download_images(api, username, retweets, replies, num_tweets, output_folder):
-  tweets = api.user_timeline(screen_name=username, count=200, include_rts=retweets, exclude_replies=replies)
-  if not os.path.exists(output_folder):
-      os.makedirs(output_folder)
-
+  # Initialize downloaded and create output folder if it doesn't exist
   downloaded = 0
-  while (len(tweets) != 0):    
-    last_id = tweets[-1].id
-    
-    for status in tweets:
-      media = status.entities.get('media', []) 
-      if(len(media) > 0 and downloaded < num_tweets):
-        wget.download(media[0]['media_url'], out=output_folder)
-        downloaded += 1        
+  if not os.path.exists(output_folder):
+    os.makedirs(output_folder)
 
-    tweets = api.user_timeline(screen_name=username, count=200, include_rts=retweets, exclude_replies=replies, max_id=last_id-1)
+  # Iterate through tweets
+  for status in tweepy.Cursor(api.user_timeline, screen_name=username, include_rts=retweets, exclude_replies=replies, tweet_mode='extended').items():
+
+    # If we've downloaded all the images, break the loop; no point hammering the API more
+    if downloaded >= num_tweets:
+      break
+
+    # Get all entities (can be multiple per tweet)
+    media = status._json.get('extended_entities', {}).get('media', [])
+    
+    # If the tweet had media
+    if media:
+      # Iterate through all pictures in the tweet and download them
+      for image in media:
+        wget.download(image['media_url'], out=output_folder)
+
+      # Increment our media tweet counter
+      downloaded += 1
 
 def main():    
   arguments = parse_arguments() 
@@ -69,7 +77,7 @@ def main():
 
   config = parse_config('../config.cfg')
   auth = authorise_twitter_api(config)   
-  api = tweepy.API(auth)
+  api = tweepy.API(auth, wait_on_rate_limit=True)
 
   download_images(api, username, retweets, replies, num_tweets, output_folder)
 
