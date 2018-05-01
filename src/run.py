@@ -55,10 +55,13 @@ def tweet_media_url(tweet_status):
 def tweets_with_media(tweets):
   return [tweet for tweet in tweets if tweet_media_url(tweet)]
 
-def download_images_by_user(api, username, retweets, replies, num_tweets, output_folder):
-  tweets = api.user_timeline(screen_name=username, count=100, include_rts=retweets, exclude_replies=replies)
+def create_folder(output_folder):
   if not os.path.exists(output_folder):
       os.makedirs(output_folder)
+
+def download_images_by_user(api, username, retweets, replies, num_tweets, output_folder):
+  tweets = api.user_timeline(screen_name=username, count=100, include_rts=retweets, exclude_replies=replies)
+  create_folder(output_folder)
 
   downloaded = 0
   while (len(tweets) != 0 and downloaded < num_tweets):    
@@ -74,8 +77,7 @@ def download_images_by_user(api, username, retweets, replies, num_tweets, output
 
 def download_images_by_tag(api, tag, retweets, replies, num_tweets, output_folder):
   tweets = api.search('#'+tag, count=100, include_rts=retweets, exclude_replies=replies)
-  if not os.path.exists(output_folder):
-      os.makedirs(output_folder)
+  create_folder(output_folder)
 
   downloaded = 0
   while (len(tweets) != 0 and downloaded < num_tweets):
