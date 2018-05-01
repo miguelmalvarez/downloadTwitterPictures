@@ -43,12 +43,12 @@ def authorise_twitter_api(config):
   return auth
 
 def download_images_by_user(api, username, retweets, replies, num_tweets, output_folder):
-  tweets = api.user_timeline(screen_name=username, count=200, include_rts=retweets, exclude_replies=replies)
+  tweets = api.user_timeline(screen_name=username, count=100, include_rts=retweets, exclude_replies=replies)
   if not os.path.exists(output_folder):
       os.makedirs(output_folder)
 
   downloaded = 0
-  while (len(tweets) != 0):    
+  while (len(tweets) != 0 and downloaded < num_tweets):    
     last_id = tweets[-1].id
     
     for status in tweets:
@@ -57,7 +57,25 @@ def download_images_by_user(api, username, retweets, replies, num_tweets, output
         wget.download(media[0]['media_url'], out=output_folder)
         downloaded += 1        
 
-    tweets = api.user_timeline(screen_name=username, count=200, include_rts=retweets, exclude_replies=replies, max_id=last_id-1)
+    tweets = api.user_timeline(screen_name=username, count=100, include_rts=retweets, exclude_replies=replies, max_id=last_id-1)
+
+def download_images_by_tag(api, tag, retweets, replies, num_tweets, output_folder):
+  tweets = api.search('#'+tag, count=100, include_rts=retweets, exclude_replies=replies)
+  if not os.path.exists(output_folder):
+      os.makedirs(output_folder)
+
+  downloaded = 0
+  while (len(tweets) != 0 and downloaded < num_tweets):
+    print("{} tweets processed".format(len(tweets)))
+    last_id = tweets[-1].id
+    
+    for status in tweets:
+      media = status.entities.get('media', []) 
+      if(len(media) > 0 and downloaded < num_tweets):
+        wget.download(media[0]['media_url'], out=output_folder)
+        downloaded += 1        
+
+    tweets = api.search('#'+tag, count=100, include_rts=retweets, exclude_replies=replies, max_id=last_id-1)
 
 def main():    
   arguments = parse_arguments() 
@@ -68,10 +86,10 @@ def main():
   output_folder = arguments.output
 
   config = parse_config('../config.cfg')
-  auth = authorise_twitter_api(config)   
+  auth = authorise_twitter_api(config)
   api = tweepy.API(auth)
 
-  download_images_by_user(api, username, retweets, replies, num_tweets, output_folder)
+  download_images_by_tag(api, username, retweets, replies, num_tweets, output_folder)
 
 if __name__=='__main__':
     main()
