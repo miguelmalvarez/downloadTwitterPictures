@@ -9,7 +9,7 @@ import configparser
 #TODO: Limit by number of tweets?
 def parse_arguments():
   parser = argparse.ArgumentParser(description='Download pictures from a Twitter feed.')
-  parser.add_argument('username', type=str, help='The twitter screen name from the account we want to retrieve all the pictures')
+  parser.add_argument('--username', type=str, default='NatGeoPhotos', help='The twitter screen name from the account we want to retrieve all the pictures')
   parser.add_argument('--num', type=int, default=100, help='Maximum number of tweets to be returned.')
   parser.add_argument('--retweets', default=False, action='store_true', help='Include retweets')
   parser.add_argument('--replies', default=False, action='store_true', help='Include replies')
@@ -20,7 +20,7 @@ def parse_arguments():
 
 def parse_config(config_file):
   config = configparser.ConfigParser()
-  config.read(config_file)  
+  config.read(config_file)
   return config 
   
 @classmethod
@@ -42,7 +42,7 @@ def authorise_twitter_api(config):
   auth.set_access_token(config['DEFAULT']['access_token'], config['DEFAULT']['access_secret'])
   return auth
 
-def download_images(api, username, retweets, replies, num_tweets, output_folder):
+def download_images_by_user(api, username, retweets, replies, num_tweets, output_folder):
   tweets = api.user_timeline(screen_name=username, count=200, include_rts=retweets, exclude_replies=replies)
   if not os.path.exists(output_folder):
       os.makedirs(output_folder)
@@ -71,7 +71,7 @@ def main():
   auth = authorise_twitter_api(config)   
   api = tweepy.API(auth)
 
-  download_images(api, username, retweets, replies, num_tweets, output_folder)
+  download_images_by_user(api, username, retweets, replies, num_tweets, output_folder)
 
 if __name__=='__main__':
     main()
