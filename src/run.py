@@ -44,7 +44,7 @@ def authorise_twitter_api(config):
   auth.set_access_token(config['DEFAULT']['access_token'], config['DEFAULT']['access_secret'])
   return auth
 
-# It returns None if the tweet doesn't have any media
+# It returns [] if the tweet doesn't have any media
 def tweet_media_urls(tweet_status):
   media = tweet_status._json.get('extended_entities', {}).get('media', [])
   if (len(media) == 0):
@@ -56,36 +56,27 @@ def create_folder(output_folder):
   if not os.path.exists(output_folder):
       os.makedirs(output_folder)
 
-def download_images_by_user(api, username, retweets, replies, num_tweets, output_folder):
+def download_images(status, num_tweets, output_folder):
   create_folder(output_folder)
   downloaded = 0
 
-  for status in tweepy.Cursor(api.user_timeline, screen_name=username, include_rts=retweets, 
-                              exclude_replies=replies, tweet_mode='extended').items():
+  for tweet_status in status:
 
     if(downloaded >= num_tweets):
       break
 
-    for media_url in tweet_media_urls(status):
+    for media_url in tweet_media_urls(tweet_status):
       wget.download(media_url, out=output_folder)
       downloaded += 1
+
+def download_images_by_user(api, username, retweets, replies, num_tweets, output_folder):
+
+  status = tweepy.Cursor(api.user_timeline, screen_name=username, include_rts=retweets, exclude_replies=replies, tweet_mode='extended').items()
+  download_images(status, num_tweets, output_folder)
 
 def download_images_by_tag(api, tag, retweets, replies, num_tweets, output_folder):
-  create_folder(output_folder)
-  downloaded = 0
-  
-  # tweets = api.search('#'+tag, count=100, include_rts=retweets, exclude_replies=replies)
-
-
-  for status in tweepy.Cursor(api.search, '#'+tag, include_rts=retweets, 
-                              exclude_replies=replies, tweet_mode='extended').items():
-
-    if(downloaded >= num_tweets):
-      break
-
-    for media_url in tweet_media_urls(status):
-      wget.download(media_url, out=output_folder)
-      downloaded += 1
+  status = tweepy.Cursor(api.search, '#'+tag, include_rts=retweets, exclude_replies=replies, tweet_mode='extended').items()
+  download_images(status, num_tweets, output_folder)
 
 def main():
   arguments = parse_arguments() 
