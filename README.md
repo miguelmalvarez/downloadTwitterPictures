@@ -19,5 +19,7 @@ The library also allows to include retweets or replies, and to specify a differe
 
 ```bash
 python run.py --username NASA --num 10 --replies --retweets
-python run.py --username NASA --num 10 --replies --retweets --output NASA_Pictures
+python run.py --username NASA --num 10 --replies --retweets --output ../NASA_Pictures
 ```
+
+The library will only download pictures that are not in the output folder already to avoid duplications. 
