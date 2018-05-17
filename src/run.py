@@ -45,49 +45,52 @@ def authorise_twitter_api(config):
   return auth
 
 # It returns None if the tweet doesn't have any media
-def tweet_media_url(tweet_status):
-  media = tweet_status.entities.get('media', [])
+def tweet_media_urls(tweet_status):
+  media = tweet_status._json.get('extended_entities', {}).get('media', [])
   if (len(media) == 0):
     return None
   else:
-    return media[0]['media_url']
+    return [item['media_url'] for item in media]
 
 def tweets_with_media(tweets):
-  return [tweet for tweet in tweets if tweet_media_url(tweet)]
+  return [tweet for tweet in tweets if tweet_media_urls(tweet)]
 
 def create_folder(output_folder):
   if not os.path.exists(output_folder):
       os.makedirs(output_folder)
 
 def download_images_by_user(api, username, retweets, replies, num_tweets, output_folder):
-  tweets = api.user_timeline(screen_name=username, count=100, include_rts=retweets, exclude_replies=replies)
   create_folder(output_folder)
+  tweets = api.user_timeline(screen_name=username, count=100, include_rts=retweets, exclude_replies=replies)
 
   downloaded = 0
   while (len(tweets) != 0 and downloaded < num_tweets):    
     last_id = tweets[-1].id
 
     for status in tweets_with_media(tweets):
-      media_url = tweet_media_url(status)
+      media_urls = tweet_media_urls(status)
       if(downloaded < num_tweets):
-        wget.download(media_url, out=output_folder)
         downloaded += 1
+        for media_url in media_urls:
+          wget.download(media_url, out=output_folder)
 
     tweets = api.user_timeline(screen_name=username, count=100, include_rts=retweets, exclude_replies=replies, max_id=last_id-1)
 
 def download_images_by_tag(api, tag, retweets, replies, num_tweets, output_folder):
-  tweets = api.search('#'+tag, count=100, include_rts=retweets, exclude_replies=replies)
   create_folder(output_folder)
+  tweets = api.search('#'+tag, count=100, include_rts=retweets, exclude_replies=replies)
 
   downloaded = 0
   while (len(tweets) != 0 and downloaded < num_tweets):
     last_id = tweets[-1].id
-    
+
     for status in tweets_with_media(tweets):
-        media_url = tweet_media_url(status)
-        if(downloaded < num_tweets):
+      media_urls = tweet_media_urls(status)
+      if(downloaded < num_tweets):
+        downloaded += 1
+        for media_url in media_urls:
           wget.download(media_url, out=output_folder)
-          downloaded += 1
+
     tweets = api.search('#'+tag, count=100, include_rts=retweets, exclude_replies=replies, max_id=last_id-1)
 
 def main():
@@ -101,7 +104,7 @@ def main():
 
   config = parse_config('../config.cfg')
   auth = authorise_twitter_api(config)
-  api = tweepy.API(auth)
+  api = tweepy.API(auth, wait_on_rate_limit=True)
 
   if hashtag:
     download_images_by_tag(api, hashtag, retweets, replies, num_tweets, output_folder)
