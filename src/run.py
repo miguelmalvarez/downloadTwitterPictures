@@ -70,7 +70,7 @@ def download_images(status, num_tweets, output_folder):
       
       file_name = os.path.split(media_url)[1]
       if not os.path.exists(os.path.join(output_folder, file_name)):
-        wget.download(media_url, out=output_folder)
+	wget.download(media_url +":orig", out=output_folder+media_url)
         downloaded += 1
 
 def download_images_by_user(api, username, retweets, replies, num_tweets, output_folder):
