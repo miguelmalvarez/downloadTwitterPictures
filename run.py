@@ -10,12 +10,13 @@ import configparser
 def parse_arguments():
   parser = argparse.ArgumentParser(description='Download pictures from Twitter.')
   group = parser.add_mutually_exclusive_group(required=True)
+  #TODO: Config as parameter
   group.add_argument('--username', type=str, help='The twitter screen name from the account we want to retrieve all the pictures')
   group.add_argument('--hashtag', type=str, help='The twitter tag we want to retrieve all the pictures. ')
   parser.add_argument('--num', type=int, default=100, help='Maximum number of tweets to be returned.')
   parser.add_argument('--retweets', default=False, action='store_true', help='Include retweets')
   parser.add_argument('--replies', default=False, action='store_true', help='Include replies')
-  parser.add_argument('--output', default='../pictures/', type=str, help='folder where the pictures will be stored')
+  parser.add_argument('--output', default='pictures/', type=str, help='folder where the pictures will be stored')
 
   args = parser.parse_args()
   return args
@@ -87,7 +88,7 @@ def main():
   num_tweets = arguments.num
   output_folder = arguments.output
 
-  config = parse_config('../config.cfg')
+  config = parse_config('config.cfg')
   auth = authorise_twitter_api(config)
   api = tweepy.API(auth, wait_on_rate_limit=True)
 
