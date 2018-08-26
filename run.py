@@ -67,11 +67,13 @@ def download_images(status, num_tweets, output_folder):
       break
 
     for media_url in tweet_media_urls(tweet_status):
-      wget.download(media_url, out=output_folder)
-      downloaded += 1
+      # Only download if there is not a picture with the same name in the folder already
+      file_name = os.path.split(media_url)[1]
+      if not os.path.exists(os.path.join(output_folder, file_name)):
+        wget.download(media_url +":orig", out=output_folder+'/'+file_name)
+        downloaded += 1
 
 def download_images_by_user(api, username, retweets, replies, num_tweets, output_folder):
-
   status = tweepy.Cursor(api.user_timeline, screen_name=username, include_rts=retweets, exclude_replies=replies, tweet_mode='extended').items()
   download_images(status, num_tweets, output_folder)
 
