@@ -24,8 +24,8 @@ def parse_arguments():
 def parse_config(config_file):
   config = configparser.ConfigParser()
   config.read(config_file)
-  return config 
-  
+  return config
+
 @classmethod
 def parse(cls, api, raw):
     status = cls.first_parse(api, raw)
@@ -68,7 +68,7 @@ def download_images(status, num_tweets, output_folder):
 
     for media_url in tweet_media_urls(tweet_status):
       # Only download if there is not a picture with the same name in the folder already
-      file_name = os.path.split(media_url)[1]
+      file_name = str(tweet_status.created_at)+".jpg"
       if not os.path.exists(os.path.join(output_folder, file_name)):
         wget.download(media_url +":orig", out=output_folder+'/'+file_name)
         downloaded += 1
@@ -82,7 +82,7 @@ def download_images_by_tag(api, tag, retweets, replies, num_tweets, output_folde
   download_images(status, num_tweets, output_folder)
 
 def main():
-  arguments = parse_arguments() 
+  arguments = parse_arguments()
   username = arguments.username
   hashtag = arguments.hashtag
   retweets = arguments.retweets
