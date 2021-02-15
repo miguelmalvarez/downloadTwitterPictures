@@ -1,2 +1,2 @@
-tweepy==3.6.0
+tweepy==3.8.0
 wget==3.2
