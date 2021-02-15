@@ -2,6 +2,9 @@
 
 _Library to download the pictures from a given twitter account or a given hashtag._
 
+Note: 
+At the moment, the pictures being downloaded will be of low resolution due to a problem with one of the libraries.
+I will be looking into this soon.
 
 ## Basic usage
 
