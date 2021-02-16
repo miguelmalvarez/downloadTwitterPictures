@@ -57,7 +57,8 @@ def tweet_media_urls(tweet_status):
     if len(media) == 0:
         return []
     else:
-        return [item['media_url'] for item in media]
+        # Follow the pattern <base_url>?format=<format>&name=<name>
+        return [f"{item['media_url']}?format=jpg&name=large" for item in media]
 
 
 def create_folder(output_folder):
