@@ -7,7 +7,6 @@ import argparse
 import configparser
 
 
-# TODO: Limit by number of tweets?
 def parse_arguments():
     parser = argparse.ArgumentParser(description='Download pictures from Twitter.')
     group = parser.add_mutually_exclusive_group(required=True)
@@ -53,12 +52,13 @@ def authorise_twitter_api(config):
 
 # It returns [] if the tweet doesn't have any media
 def tweet_media_urls(tweet_status):
-    media = tweet_status._json.get('extended_entities', {}).get('media', [])
-    if len(media) == 0:
-        return []
-    else:
-        # Follow the pattern <base_url>?format=<format>&name=<name>
+    # At least one image
+    if 'media' in tweet_status.entities:
+        # Grabbing all pictures
+        media = tweet_status.extended_entities['media']
         return [f"{item['media_url']}?format=jpg&name=large" for item in media]
+    else:
+        return []
 
 
 def create_folder(output_folder):
