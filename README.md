@@ -1,6 +1,6 @@
 # downloadTwitterPictures
 
-_Library to download the pictures from a given twitter account or a given hashtag._
+_Library to download the pictures from a given Twitter account or a given hashtag._
 
 ## Basic usage
 
@@ -22,4 +22,4 @@ python run.py --username NASA --num 10 --replies --retweets --output ../NASA_Pic
 python run.py --username NASA --num 10 --replies --retweets --config config.cfg --output ../NASA_Pictures
 ```
 
-The library will only download pictures that are not in the output folder already to avoid duplications. 
+The library will only download pictures that are not in the output folder already to avoid duplications. It will also try to download the pictures in their largest possible size.  
