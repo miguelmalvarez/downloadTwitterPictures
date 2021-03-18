@@ -2,6 +2,9 @@
 
 _Library to download the pictures from a given Twitter account or a given hashtag._
 
+Note: In order to use this code, you have to [register your own 'app' in Twitter](http://apps.twitter.com/)  so that you can have your own credentials (consumer key and secret). 
+Once this is done, you should add these details in a 'config.cfg' file (with the same structure as 'sample-config.cfg').  
+
 ## Basic usage
 
 You can download the pictures for a given user as follows:
