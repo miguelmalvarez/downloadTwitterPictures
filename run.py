@@ -19,7 +19,7 @@ def parse_arguments():
     parser.add_argument('--num', type=int, default=100, help='Maximum number of tweets to be returned.')
     parser.add_argument('--retweets', default=False, action='store_true', help='Include retweets')
     parser.add_argument('--replies', default=False, action='store_true', help='Include replies')
-    parser.add_argument('--output', default='pictures/', type=str, help='folder where the pictures will be stored')
+    parser.add_argument('--output', default=None, type=str, help='folder where the pictures will be stored')
 
     args = parser.parse_args()
     return args
@@ -110,10 +110,12 @@ def get_media_jpg_or_gif(media):
         for item in media if item['type'] == 'animated_gif' ]
 
     for item in media:
-        if item['type'] != 'photo' and item['type'] != 'animated_gif':
-            from pprint import pprint as pp
-            pp("Unhandled media type")
-            pp(item["type"])
+        if item['type'] == 'photo': continue
+        if item['type'] == 'animated_gif': continue
+        if item['type'] == 'video': continue
+        from pprint import pprint as pp
+        pp("Unhandled media type")
+        pp(item["type"])
 #            import code
 #            code.interact(local=dict(globals(), **locals()))
 
@@ -136,17 +138,11 @@ def download_images(status, num_tweets, output_folder):
     ts_file = os.path.join(output_folder, '.timestamp')
     downloaded = 0
 
-    from pprint import pprint as pp
-    pp ("status is ")
-    pp (status)
-    print ('\n')
-
     for tweet_status in status:
 
-        # The tweet time is ahead by one hour. What the heck!?
+        # XXX The tweet time is ahead by one hour. What the heck!?
         # Daylight savings? If UTC, should be 7 or 8 hours offset. 
-
-# Tried UTC timezone but it didn't help.
+        # Tried UTC timezone but it didn't help.
 #        tweet_status.created_at = \
 #            tweet_status.created_at.astimezone(timezone.utc)
 
@@ -206,10 +202,10 @@ def download_images(status, num_tweets, output_folder):
                 # XXX Eventually, we'll get tweets in forward order
                 # using a cursor, in which case we'll use something
                 # more like this:
-#                if not os.path.exists(ts_file):
-#                    os.close(os.open(ts_file, os.O_CREAT))
-#                os.utime(ts_file, (ctime, ctime)) 
-                
+               # if not os.path.exists(ts_file):
+               #     os.close(os.open(ts_file, os.O_CREAT))
+               # os.utime(ts_file, (ctime, ctime)) 
+    print("End of tweet statuses")
 
 def download_images_by_user(api, username, retweets, replies, num_tweets, output_folder):
     status = tweepy.Cursor(api.user_timeline, screen_name=username, include_rts=retweets, exclude_replies=replies,
@@ -230,8 +226,14 @@ def main():
     retweets = arguments.retweets
     replies = arguments.replies
     num_tweets = arguments.num
-    output_folder = arguments.output
     config_path = arguments.config
+
+    for f in (arguments.output, arguments.username, arguments.hashtag):
+        if f:
+            output_folder = f
+            break
+    if not output_folder:
+        output_folder='pictures/'
 
     auth = authorise_twitter_api(config_path)
     api = tweepy.API(auth, wait_on_rate_limit=True)
