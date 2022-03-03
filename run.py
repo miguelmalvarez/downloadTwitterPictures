@@ -7,6 +7,7 @@ import wget
 import argparse
 import configparser
 from datetime import timezone
+import sys
 
 
 def parse_arguments():
@@ -63,7 +64,9 @@ def get_access(auth):
         sys.exit(1)
 
     print('Please get a PIN verifier from ' + redirect_url)
-    verifier = input('Verifier: ')
+    verifier=None
+    while not verifier or '\ufffc' in verifier:
+        verifier = input('Verifier: ')
     try:
         auth.get_access_token(verifier)
     except tweepy.TweepError:
@@ -73,7 +76,25 @@ def get_access(auth):
 
 def authorise_twitter_api(config_path):
     config = parse_config(config_path)
-    auth = OAuthHandler(config['DEFAULT']['consumer_key'], config['DEFAULT']['consumer_secret'])
+    if not config.has_option('DEFAULT', 'consumer_key') or not config.has_option('DEFAULT', 'consumer_secret'):
+        # Ooops, no config.cfg file. Need to generate one.
+        print(f"{config_path} is missing consumer_key / consumer_secret.")
+        print("Please register your own app at http://apps.twitter.com/.")
+        consumer_key = None
+        consumer_secret = None
+        while not consumer_key or '\ufffc' in consumer_key:
+            consumer_key = input('Consumer (API) key: ')
+        config.read_string(f"[DEFAULT]\nconsumer_key = {consumer_key}")
+        while not consumer_secret or '\ufffc' in consumer_secret:
+            consumer_secret = input('Consumer (API) secret: ')
+        config.read_string(f"[DEFAULT]\nconsumer_secret = {consumer_secret}")
+
+    try:
+        auth = OAuthHandler(config['DEFAULT']['consumer_key'], config['DEFAULT']['consumer_secret'])
+    except TokenRequestDenied:
+        print('Error! Failed to get API token.')
+        sys.exit(1)
+
 
     if 'access_token' not in config['DEFAULT']:
         # Ask the user for an access token from Twitter
