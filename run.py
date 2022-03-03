@@ -107,7 +107,8 @@ def get_media_jpg_or_gif(media):
 
     b=[ { 'filename': f"{item['id_str']}.mp4", 
           'url': f"{item['video_info']['variants'][0]['url']}" }
-        for item in media if item['type'] == 'animated_gif' ]
+        for item in media
+        if item['type'] == 'video' or item['type'] == 'animated_gif' ]
 
     for item in media:
         if item['type'] == 'photo': continue
