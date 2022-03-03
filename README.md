@@ -6,7 +6,7 @@ This is a (hopefully temporary) fork of miguelmalvarez's
 downloadTwitterPictures which has some bug fixes and improvements. For
 example, it downloads animations as mp4 instead of jpeg and it prompts
 the user to retrieve the authorization if there is no existing
-config.txt file.
+config.cfg file.
 
 ____
 
