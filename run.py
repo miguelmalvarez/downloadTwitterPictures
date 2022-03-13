@@ -186,10 +186,9 @@ def download_images(status, num_tweets, output_folder):
         # Creation time of tweet as seconds.nanoseconds since The Epoch.
         ctime = tweet_status.created_at.strftime('%s') 
         ctime = float(ctime)
-        print(ctime)
 
         if ctime < timestamp:
-            # XXX Probably ought to use the Twitter's "cursor" to request tweets newer than timestamp
+            # TODO: Probably ought to use the Twitter's "cursor" to request tweets newer than timestamp
             print('Stopping at ' + created + ' which is older than .timestamp' )
             return
 
