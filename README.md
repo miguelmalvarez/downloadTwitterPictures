@@ -1,15 +1,5 @@
 # downloadTwitterPictures
 
-## Fork from miguelmalvarez
-
-This is a (hopefully temporary) fork of miguelmalvarez's
-downloadTwitterPictures which has some bug fixes and improvements. For
-example, it downloads animations as mp4 instead of jpeg and it prompts
-the user to retrieve the authorization if there is no existing
-config.cfg file.
-
-____
-
 _Library to download the pictures from a given Twitter account or a given hashtag._
 
 Note: In order to use this code, you have to [register your own 'app' in Twitter](http://apps.twitter.com/)  so that you can have your own credentials (consumer key and secret). 
