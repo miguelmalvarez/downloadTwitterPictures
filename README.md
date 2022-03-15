@@ -11,18 +11,20 @@ You can download the pictures for a given user as follows:
 
 ```bash
 # Download 10 images from the National Geographic Twitter Account
-python run.py --username NatGeoPhotos --num 10
+./run.py --username NatGeoPhotos --num 10
 
 # Download 10 images with the hashtag Photography
-python run.py --hashtag Photography --num 10
+./run.py --hashtag Photography --num 10
 ```
 
-The library also allows to include retweets or replies, and to specify a different folder to save the pictures in ("pictures" is the default)
+The library also allows to --retweets and --replies to include retweets or replies, and --output to specify a different directory to save the pictures in. By default, a directory will be created with the same --username or --hashtag as was specified on the command line. Failing that, the default output directory is "pictures/".
 
 ```bash
-python run.py --username NASA --num 10 --replies --retweets
-python run.py --username NASA --num 10 --replies --retweets --output ../NASA_Pictures
-python run.py --username NASA --num 10 --replies --retweets --config config.cfg --output ../NASA_Pictures
+./run.py --username NASA --num 10 --replies --retweets
+./run.py --username NASA --num 10 --replies --retweets --output ../NASA_Pictures
+./run.py --username NASA --num 10 --replies --retweets --config config.cfg --output ../NASA_Pictures
 ```
 
-The library will only download pictures that are not in the output folder already to avoid duplications. It will also try to download the pictures in their largest possible size.  
+The library will only download pictures that are not in the output folder already to avoid duplications. It will also try to download the pictures in their largest possible size.
+
+Usually one is interested in only new pictures that have been posted since the last time an account was checked. However, if the previous pictures were deleted or renamed, they would be redownloaded. To prevent that from happening, a file in the output directory called ".timestamp" is created which is used to mark the last time images were downloaded. If for some reason you want to search further back in time, you may simply delete the .timestamp file. 

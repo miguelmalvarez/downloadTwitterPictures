@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 import tweepy
 import os
 from tweepy import OAuthHandler
@@ -5,6 +6,8 @@ import json
 import wget
 import argparse
 import configparser
+from datetime import timezone
+import sys
 
 
 def parse_arguments():
@@ -17,7 +20,7 @@ def parse_arguments():
     parser.add_argument('--num', type=int, default=100, help='Maximum number of tweets to be returned.')
     parser.add_argument('--retweets', default=False, action='store_true', help='Include retweets')
     parser.add_argument('--replies', default=False, action='store_true', help='Include replies')
-    parser.add_argument('--output', default='pictures/', type=str, help='folder where the pictures will be stored')
+    parser.add_argument('--output', default=None, type=str, help='folder where the pictures will be stored')
 
     args = parser.parse_args()
     return args
@@ -27,6 +30,12 @@ def parse_config(config_file):
     config = configparser.ConfigParser()
     config.read(config_file)
     return config
+
+def save_config(config, config_file):
+    with open(config_file, 'w') as fp:
+        config.write(fp)
+        print('Wrote ' + config_file)
+    return
 
 
 def parse(cls, api, raw):
@@ -44,9 +53,59 @@ def init_tweepy():
     tweepy.models.User.parse = parse
 
 
-def authorise_twitter_api(config):
-    auth = OAuthHandler(config['DEFAULT']['consumer_key'], config['DEFAULT']['consumer_secret'])
+def get_access(auth):
+    # This is called if there is no access token yet in the config.cfg file.
+    # This routine asks the user retrieve one from twitter.
+    # Access token & secret are returned in auth.access_token{_secret}.
+    try:
+        redirect_url = auth.get_authorization_url()
+    except tweepy.TweepError:
+        print('Error! Failed to get request token.')
+        sys.exit(1)
+
+    print('Please get a PIN verifier from ' + redirect_url)
+    verifier=None
+    while not verifier or '\ufffc' in verifier:
+        verifier = input('Verifier: ')
+    try:
+        auth.get_access_token(verifier)
+    except tweepy.TweepError:
+        print('Error! Failed to get access token.')
+        sys.exit(1)
+
+
+def authorise_twitter_api(config_path):
+    config = parse_config(config_path)
+    if not config.has_option('DEFAULT', 'consumer_key') or not config.has_option('DEFAULT', 'consumer_secret'):
+        # Ooops, no config.cfg file. Need to generate one.
+        print(f"{config_path} is missing consumer_key / consumer_secret.")
+        print("Please register your own app at http://apps.twitter.com/.")
+        consumer_key = None
+        consumer_secret = None
+        while not consumer_key or '\ufffc' in consumer_key:
+            consumer_key = input('Consumer (API) key: ')
+        config.read_string(f"[DEFAULT]\nconsumer_key = {consumer_key}")
+        while not consumer_secret or '\ufffc' in consumer_secret:
+            consumer_secret = input('Consumer (API) secret: ')
+        config.read_string(f"[DEFAULT]\nconsumer_secret = {consumer_secret}")
+
+    try:
+        auth = OAuthHandler(config['DEFAULT']['consumer_key'], config['DEFAULT']['consumer_secret'])
+    except TokenRequestDenied:
+        print('Error! Failed to get API token.')
+        sys.exit(1)
+
+
+    if 'access_token' not in config['DEFAULT']:
+        # Ask the user for an access token from Twitter
+        get_access(auth)
+        config['DEFAULT']['access_token'] = auth.access_token
+        config['DEFAULT']['access_secret'] = auth.access_token_secret
+        save_config(config, config_path)
+
+    # Tell tweepy to use the user's access token.
     auth.set_access_token(config['DEFAULT']['access_token'], config['DEFAULT']['access_secret'])
+
     return auth
 
 
@@ -56,36 +115,118 @@ def tweet_media_urls(tweet_status):
     if 'media' in tweet_status.entities:
         # Grabbing all pictures
         media = tweet_status.extended_entities['media']
-        return [f"{item['media_url']}?format=jpg&name=large" for item in media]
-    else:
-        return []
 
+        return get_media_jpg_or_gif(media)
+    else:
+        return {}
+
+def get_media_jpg_or_gif(media):
+
+    a=[ { 'filename': f"{item['id_str']}.jpg", 
+          'url': f"{item['media_url']}?format=jpg&name=large" }
+        for item in media if item['type'] == 'photo' ]
+
+    b=[ { 'filename': f"{item['id_str']}.mp4", 
+          'url': f"{item['video_info']['variants'][0]['url']}" }
+        for item in media
+        if item['type'] == 'video' or item['type'] == 'animated_gif' ]
+
+    for item in media:
+        if item['type'] == 'photo': continue
+        if item['type'] == 'animated_gif': continue
+        if item['type'] == 'video': continue
+        from pprint import pprint as pp
+        pp("Unhandled media type")
+        pp(item["type"])
+#            import code
+#            code.interact(local=dict(globals(), **locals()))
+
+    return a+b
 
 def create_folder(output_folder):
+    "Create a folder if it doesn't exist. Return modification time of .timestamp if it does."
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
-
+        timestamp = 0
+    else:
+        try:
+            timestamp = os.stat(os.path.join(output_folder, '.timestamp')).st_mtime
+        except:
+            timestamp = 0
+    return timestamp
 
 def download_images(status, num_tweets, output_folder):
-    create_folder(output_folder)
+    timestamp = create_folder(output_folder)
+    ts_file = os.path.join(output_folder, '.timestamp')
     downloaded = 0
 
     for tweet_status in status:
+
+        # XXX The tweet time is ahead by one hour. What the heck!?
+        # Daylight savings? If UTC, should be 7 or 8 hours offset. 
+        # Tried UTC timezone but it didn't help.
+#        tweet_status.created_at = \
+#            tweet_status.created_at.astimezone(timezone.utc)
+
+#        from pprint import pprint as pp
+#        pp(tweet_status._json)
+#        import code
+#        code.interact(local=dict(globals(), **locals()))
+        
         if downloaded >= num_tweets:
+            print('Stopping after downloading ' + str(num_tweets) + ' tweets.' )
             break
 
-        for count, media_url in enumerate(tweet_media_urls(tweet_status)):
-            # Only download if there is not a picture with the same name in the folder already
-            created = tweet_status.created_at.strftime('%d-%m-%y at %H.%M.%S')
-            file_name = "{}_({}).jpg".format(created, count + 1)
-            if not os.path.exists(os.path.join(output_folder, file_name)):
+
+        # Metadata for creating the filename, image comment, timestamp
+        created = tweet_status.created_at.strftime('%y-%m-%d at %H.%M.%S %Z')
+        tweet_id = tweet_status.id_str
+        full_text = tweet_status.full_text
+
+        # Creation time of tweet as seconds.nanoseconds since The Epoch.
+        ctime = tweet_status.created_at.strftime('%s') 
+        ctime = float(ctime)
+
+        if ctime < timestamp:
+            # TODO: Probably ought to use the Twitter's "cursor" to request tweets newer than timestamp
+            print('Stopping at ' + created + ' which is older than .timestamp' )
+            return
+
+        for media_info in tweet_media_urls(tweet_status):
+            # Download each media URL, if the file doesn't exist already.
+            file_name = media_info['filename']
+            media_url = media_info['url']
+
+            output_file = os.path.join(output_folder, file_name)
+            if os.path.exists(output_file):
+                print(f"Skipping existing file: {file_name}")
+            else:
                 print(media_url)
-                print(output_folder + '/' + file_name)
-                # TODO: Figure out how to include ':orig' at the end in a way that works with wget to get the
-                # full size resolution
-                wget.download(media_url, out=output_folder + '/' + file_name)
+                print(full_text)
+                print(output_file)
+
+                # TODO: Figure out how to include ':orig' at the end
+                # in a way that works with wget to get the full size
+                # resolution
+                wget.download(media_url, out=output_file)
                 downloaded += 1
 
+                # Set modification time to the tweet creation time.
+                os.utime(output_file, (ctime, ctime))
+
+                # TODO: Embed comment (full_text)
+
+                # Touch the .timestamp file 
+                os.close(os.open(ts_file, os.O_CREAT))
+                
+
+                # XXX Eventually, we'll get tweets in forward order
+                # using a cursor, in which case we'll use something
+                # more like this:
+               # if not os.path.exists(ts_file):
+               #     os.close(os.open(ts_file, os.O_CREAT))
+               # os.utime(ts_file, (ctime, ctime)) 
+    print("End of tweet statuses")
 
 def download_images_by_user(api, username, retweets, replies, num_tweets, output_folder):
     status = tweepy.Cursor(api.user_timeline, screen_name=username, include_rts=retweets, exclude_replies=replies,
@@ -106,11 +247,16 @@ def main():
     retweets = arguments.retweets
     replies = arguments.replies
     num_tweets = arguments.num
-    output_folder = arguments.output
     config_path = arguments.config
 
-    config = parse_config(config_path)
-    auth = authorise_twitter_api(config)
+    for f in (arguments.output, arguments.username, arguments.hashtag):
+        if f:
+            output_folder = f
+            break
+    if not output_folder:
+        output_folder='pictures/'
+
+    auth = authorise_twitter_api(config_path)
     api = tweepy.API(auth, wait_on_rate_limit=True)
 
     if hashtag:
