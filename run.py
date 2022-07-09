@@ -1,13 +1,14 @@
 #!/usr/bin/python3
-import tweepy
-import os
-from tweepy import OAuthHandler
-import json
-import wget
 import argparse
 import configparser
-from datetime import timezone
+import json
+import os
 import sys
+from datetime import datetime, timezone
+
+import tweepy
+import wget
+from tweepy import OAuthHandler
 
 
 def parse_arguments():
@@ -183,9 +184,17 @@ def download_images(status, num_tweets, output_folder):
         tweet_id = tweet_status.id_str
         full_text = tweet_status.full_text
 
+        # Tweepy datetimes are naive UTC ones, so we add the timezone info for conversion
+        tweet_dt = tweet_status.created_at.replace(tzinfo=timezone.utc)
+        localtz = datetime.now().astimezone().tzinfo
+
+        # Convert to the local timezone, which is what the OS expects for the file's modified time
+        modified_tweet_dt = tweet_dt.astimezone(localtz)
+        # Remove timezone info because strftime() doesn't like it
+        modified_tweet_dt = modified_tweet_dt.replace(tzinfo=None)
+
         # Creation time of tweet as seconds.nanoseconds since The Epoch.
-        ctime = tweet_status.created_at.strftime('%s') 
-        ctime = float(ctime)
+        ctime = float(modified_tweet_dt.strftime("%s"))
 
         if ctime < timestamp:
             # TODO: Probably ought to use the Twitter's "cursor" to request tweets newer than timestamp
